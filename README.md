@@ -5,12 +5,21 @@ Solo, terminal-based D&D 5e-lite. Claude narrates; a Python rules engine owns ev
 ```
 pip install -r requirements.txt
 export ANTHROPIC_API_KEY=sk-ant-...
-python -m dnd
+
+uvicorn dnd.web:app        # web UI → http://localhost:8000
+python -m dnd              # or play in the terminal
 ```
+
+The web UI streams narration live, shows dice results inline, and keeps a live character sheet
+(HP, abilities, enemies, inventory, quests). Works on phones. Your game is saved on the server and
+remembered by your browser; to play from another device or with a friend, run
+`uvicorn dnd.web:app --host 0.0.0.0` and open the machine's IP on port 8000.
 
 ## Design
 
 ```
+browser / terminal
+       │
 player input ──► DungeonMaster (dnd/dm.py) ──► Claude (streams narration)
                        ▲                            │ tool calls
                        │ tool results               ▼
@@ -41,8 +50,12 @@ XP + level-ups to 10, inventory/gold, quest log.
 | `DND_SAVE_DIR` | `~/.dnd-saves` | |
 
 ## Tests
-`pip install pytest && python -m pytest` — offline; engine rules + DM tool loop against a fake client.
+`pip install pytest httpx && python -m pytest` — offline; engine rules, DM tool loop and web API
+against a fake Claude client.
+
+## Hosting publicly
+Anyone who can reach the server can start games on your API key. Before exposing it to the internet,
+add auth (or put it behind e.g. Cloudflare Access / Tailscale) and a per-user rate limit.
 
 ## Ideas to extend
-Party companions (extra NPC stat blocks), a world-state/lore memory file, a web UI (FastAPI + SSE
-reusing `DungeonMaster.take_turn`), images per scene, multiplayer turn order.
+Party companions (extra NPC stat blocks), a world-state/lore memory file, images per scene, multiplayer turn order.
